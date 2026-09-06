@@ -2,7 +2,8 @@ import type { Show } from "../types";
 
 /**
  * Handwritten live shows — especially local / small bands APIs will miss.
- * Upcoming dates appear on /upcoming. Once a date is in the past, it joins
+ * Upcoming dates appear on /upcoming (and merge with Ticketmaster for catalog
+ * artists). Once a date is in the past, it joins the setlist.fm list on /attended.
  * the setlist.fm list on /attended (matched by date + artist name).
  */
 export const manualShows: Show[] = [

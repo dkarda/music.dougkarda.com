@@ -14,6 +14,8 @@ export interface Artist {
   musicbrainzId?: string;
   /** setlist.fm artist MBID (often the same as MusicBrainz). */
   setlistFmMbid?: string;
+  /** Ticketmaster Discovery attraction id (optional; name lookup is the fallback). */
+  ticketmasterId?: string;
   notes?: string;
   tags?: ArtistTag[];
   members?: ArtistMember[];
@@ -24,7 +26,7 @@ export interface Artist {
   beginDate?: string;
 }
 
-export type ShowSource = "manual" | "setlistfm";
+export type ShowSource = "manual" | "setlistfm" | "ticketmaster";
 
 export interface Show {
   id: string;
@@ -75,4 +77,10 @@ export interface BirthdaysResponse {
   birthdays: BirthdayEntry[];
   fetchedAt?: string;
   note?: string;
+}
+
+export interface UpcomingResponse {
+  configured: boolean;
+  message?: string;
+  shows: Show[];
 }

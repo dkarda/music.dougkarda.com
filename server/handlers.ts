@@ -1,9 +1,18 @@
 import { artists, artistIdForMbid } from "../src/data/artists";
-import type { AttendedResponse, BirthdayEntry, BirthdaysResponse, Show } from "../src/types";
+import type {
+  Artist,
+  AttendedResponse,
+  BirthdayEntry,
+  BirthdaysResponse,
+  Show,
+  UpcomingResponse,
+} from "../src/types";
+import { isNyMetroCoords } from "../src/lib/geo";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 const SETLIST_BASE = "https://api.setlist.fm/rest/1.0";
 const MB_BASE = "https://musicbrainz.org/ws/2";
+const TM_BASE = "https://app.ticketmaster.com/discovery/v2";
 
 type Env = Record<string, string>;
 
@@ -12,6 +21,10 @@ const BIRTHDAY_TTL_MS = 24 * 60 * 60 * 1000;
 
 let attendedCache: { at: number; payload: AttendedResponse } | null = null;
 const ATTENDED_TTL_MS = 60 * 60 * 1000;
+
+let upcomingCache: { at: number; payload: UpcomingResponse } | null = null;
+const UPCOMING_TTL_MS = 60 * 60 * 1000;
+const TM_GAP_MS = 250;
 const SETLIST_PAGE_GAP_MS = 550;
 const SETLIST_MAX_PAGES = 50;
 
@@ -220,6 +233,156 @@ export async function handleBirthdays(env: Env): Promise<{ status: number; body:
   return { status: 200, body: payload };
 }
 
+type TmAttraction = { id?: string; name?: string };
+type TmVenue = {
+  name?: string;
+  city?: { name?: string };
+  state?: { stateCode?: string; name?: string };
+  location?: { latitude?: string; longitude?: string };
+};
+type TmEvent = {
+  id?: string;
+  url?: string;
+  dates?: { start?: { localDate?: string } };
+  _embedded?: { venues?: TmVenue[] };
+};
+
+function foldName(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function namesAlign(catalog: string, remote: string): boolean {
+  const a = foldName(catalog);
+  const b = foldName(remote);
+  if (!a || !b) return false;
+  return a === b || a.includes(b) || b.includes(a);
+}
+
+function usesTicketmaster(artist: Artist): boolean {
+  if (artist.ticketmasterId?.trim()) return true;
+  const tags = artist.tags ?? [];
+  if (tags.includes("local") || tags.includes("small")) return false;
+  return Boolean(artist.name.trim());
+}
+
+async function findAttractionId(
+  apiKey: string,
+  artist: Artist,
+): Promise<string | undefined> {
+  if (artist.ticketmasterId?.trim()) return artist.ticketmasterId.trim();
+
+  const url = `${TM_BASE}/attractions.json?keyword=${encodeURIComponent(artist.name)}&classificationName=music&size=8&apikey=${encodeURIComponent(apiKey)}`;
+  const response = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!response.ok) return undefined;
+  const data = (await response.json()) as { _embedded?: { attractions?: TmAttraction[] } };
+  const match = (data._embedded?.attractions ?? []).find(
+    (attraction) => attraction.id && attraction.name && namesAlign(artist.name, attraction.name),
+  );
+  return match?.id;
+}
+
+function isNyMetroVenue(venue: TmVenue | undefined): boolean {
+  if (!venue) return false;
+  const lat = Number(venue.location?.latitude);
+  const lon = Number(venue.location?.longitude);
+  if (Number.isFinite(lat) && Number.isFinite(lon)) {
+    return isNyMetroCoords(lat, lon);
+  }
+  const state = venue.state?.stateCode?.toUpperCase();
+  const city = (venue.city?.name ?? "").toLowerCase();
+  if (state === "NY") {
+    return /new york|brooklyn|queens|bronx|staten|yonkers|white plains|hempstead|uniondale|westbury|wantagh|huntington|smithtown|elmont|flushing|garden city|great neck|bethpage|uniondale/.test(
+      city,
+    );
+  }
+  if (state === "NJ") {
+    return /east rutherford|rutherford|newark|jersey city|hoboken|secaucus|meadowlands/.test(city);
+  }
+  return false;
+}
+
+function mapTmEvent(event: TmEvent, artist: Artist): Show | undefined {
+  const date = event.dates?.start?.localDate;
+  if (!date) return undefined;
+  const venue = event._embedded?.venues?.[0];
+  if (!isNyMetroVenue(venue)) return undefined;
+  const city = [venue?.city?.name, venue?.state?.stateCode ?? venue?.state?.name]
+    .filter(Boolean)
+    .join(", ");
+
+  return {
+    id: event.id ? `tm-${event.id}` : `tm-${artist.id}-${date}`,
+    artistId: artist.id,
+    artistName: artist.name,
+    date,
+    venue: venue?.name ?? "Unknown venue",
+    city: city || undefined,
+    source: "ticketmaster",
+    url: event.url,
+  };
+}
+
+async function fetchAttractionEvents(apiKey: string, attractionId: string, artist: Artist): Promise<Show[]> {
+  const url = `${TM_BASE}/events.json?attractionId=${encodeURIComponent(attractionId)}&classificationName=music&size=100&sort=date,asc&apikey=${encodeURIComponent(apiKey)}`;
+  const response = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!response.ok) return [];
+  const data = (await response.json()) as { _embedded?: { events?: TmEvent[] } };
+  return (data._embedded?.events ?? [])
+    .map((event) => mapTmEvent(event, artist))
+    .filter((show): show is Show => Boolean(show));
+}
+
+export async function handleUpcoming(env: Env): Promise<{ status: number; body: UpcomingResponse }> {
+  const apiKey = env.TICKETMASTER_API_KEY?.trim();
+
+  if (!apiKey) {
+    return {
+      status: 200,
+      body: {
+        configured: false,
+        message:
+          "Ticketmaster is not configured. Add TICKETMASTER_API_KEY (Consumer Key) to .env. The key stays on the server.",
+        shows: [],
+      },
+    };
+  }
+
+  if (upcomingCache && Date.now() - upcomingCache.at < UPCOMING_TTL_MS) {
+    return { status: 200, body: upcomingCache.payload };
+  }
+
+  const shows: Show[] = [];
+  const targets = artists.filter(usesTicketmaster);
+  let failed = 0;
+
+  for (let i = 0; i < targets.length; i += 1) {
+    if (i > 0) await sleep(TM_GAP_MS);
+    const artist = targets[i];
+    try {
+      const attractionId = await findAttractionId(apiKey, artist);
+      if (!attractionId) continue;
+      await sleep(TM_GAP_MS);
+      shows.push(...(await fetchAttractionEvents(apiKey, attractionId, artist)));
+    } catch {
+      failed += 1;
+    }
+  }
+
+  const payload: UpcomingResponse = {
+    configured: true,
+    message:
+      shows.length === 0
+        ? failed > 0
+          ? "Connected to Ticketmaster, but no upcoming dates came back (or lookups failed)."
+          : "Connected to Ticketmaster. No upcoming dates for catalog artists yet."
+          : `Ticketmaster: ${shows.length} upcoming NY-metro date${shows.length === 1 ? "" : "s"} for catalog artists.`,
+    shows,
+  };
+
+  upcomingCache = { at: Date.now(), payload };
+  return { status: 200, body: payload };
+}
+
 export async function routeApi(
   req: IncomingMessage,
   res: ServerResponse,
@@ -250,6 +413,21 @@ export async function routeApi(
       const body: BirthdaysResponse = {
         birthdays: [],
         note: error instanceof Error ? error.message : "Proxy error",
+      };
+      sendJson(res, 500, body);
+    }
+    return true;
+  }
+
+  if (url === "/api/ticketmaster/upcoming" && req.method === "GET") {
+    try {
+      const result = await handleUpcoming(env);
+      sendJson(res, result.status, result.body);
+    } catch (error) {
+      const body: UpcomingResponse = {
+        configured: Boolean(env.TICKETMASTER_API_KEY),
+        message: error instanceof Error ? error.message : "Proxy error",
+        shows: [],
       };
       sendJson(res, 500, body);
     }

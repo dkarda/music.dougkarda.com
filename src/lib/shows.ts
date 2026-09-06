@@ -32,3 +32,31 @@ export function mergePastManualShows(setlistShows: Show[], manuals: Show[]): Sho
 
   return [...byKey.values()];
 }
+
+/** Future handwritten dates, joined onto Ticketmaster rows when the same night already exists. */
+export function mergeUpcomingShows(apiShows: Show[], manuals: Show[]): Show[] {
+  const futureManual = manuals.filter((show) => isUpcoming(show.date));
+  const byKey = new Map<string, Show>();
+
+  for (const show of apiShows) {
+    byKey.set(showKey(show), show);
+  }
+
+  for (const manual of futureManual) {
+    const key = showKey(manual);
+    const existing = byKey.get(key);
+    if (existing) {
+      byKey.set(key, {
+        ...existing,
+        artistId: manual.artistId ?? existing.artistId,
+        notes: manual.notes ?? existing.notes,
+        city: manual.city ?? existing.city,
+        venue: existing.venue || manual.venue,
+      });
+    } else {
+      byKey.set(key, manual);
+    }
+  }
+
+  return [...byKey.values()];
+}

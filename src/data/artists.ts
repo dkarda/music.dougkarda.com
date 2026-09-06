@@ -8,6 +8,7 @@ import type { Artist } from "../types";
  * IDs you may fill in later:
  * - musicbrainzId: https://musicbrainz.org (artist page URL ends with the MBID)
  * - setlistFmMbid: often the same UUID; confirm on the setlist.fm artist page
+ * - ticketmasterId: optional Discovery attraction id if name lookup is wrong
  */
 export const artists: Artist[] = [
   {
@@ -28,7 +29,7 @@ export const artists: Artist[] = [
     name: "AC/DC",
     musicbrainzId: "66c662b6-6e2f-4930-8610-912e24c63ed1",
     setlistFmMbid: "",
-    beginDate: "1950-01-01",
+    beginDate: "1950-01",
     tags: ["favorite"],
     notes: "Placeholder. Replace or remove once the real list is started.",
     members: [
@@ -44,7 +45,7 @@ export const artists: Artist[] = [
     name: "Anthrax",
     musicbrainzId: "b616d6f0-ec1f-4c69-8a79-12a97ece7372",
     setlistFmMbid: "",
-    beginDate: "1950-01-01",
+    beginDate: "1950-01",
     tags: ["favorite"],
     notes: "Placeholder. Replace or remove once the real list is started.",
     members: [
@@ -56,10 +57,66 @@ export const artists: Artist[] = [
     ],
   },
   {
+    id: "candlebox",
+    name: "Candlebox",
+    musicbrainzId: "",
+    setlistFmMbid: "",
+    beginDate: "1950-01",
+    notes: "Placeholder. Replace or remove once the real list is started.",
+  },
+  {
+    id: "dana-fuchs",
+    name: "Dana Fuchs",
+    musicbrainzId: "",
+    setlistFmMbid: "",
+    beginDate: "1950-01",
+    notes: "Placeholder. Replace or remove once the real list is started.",
+  },
+  {
+    id: "deep-purple",
+    name: "Deep Purple",
+    musicbrainzId: "",
+    setlistFmMbid: "",
+    beginDate: "1950-01",
+    notes: "Placeholder. Replace or remove once the real list is started.",
+  },
+  {
+    id: "iron-maiden",
+    name: "Iron Maiden",
+    musicbrainzId: "ca891d65-d9b0-4258-89f7-e6ba29d83767",
+    setlistFmMbid: "",
+    beginDate: "1950-01",
+    tags: ["favorite"],
+    notes: "Placeholder. Replace or remove once the real list is started.",
+  },
+  {
+    id: "megadeth",
+    name: "Megadeth",
+    musicbrainzId: "a9044915-8be3-4c7e-b11f-9e2d2ea0a91e",
+    setlistFmMbid: "",
+    beginDate: "1950-01",
+    tags: ["favorite"],
+    notes: "Placeholder. Replace or remove once the real list is started.",
+  },
+  {
+    id: "metallica",
+    name: "Metallica",
+    musicbrainzId: "",
+    setlistFmMbid: "",
+    beginDate: "1950-01",
+    notes: "Placeholder. Replace or remove once the real list is started.",
+  },
+  {
     id: "slipknot",
     name: "Slipkont",
-    beginDate: "1950-01-01",
-    tags: ["favorite"],
+    beginDate: "1950-01",
+    notes:
+      "Placeholder. Add musicbrainzId from the MusicBrainz artist page when you want API-backed birthdays/releases. beginDate is enough for the Birthdays grouping.",
+  },
+  {
+    id: "stryper",
+    name: "Stryper",
+    beginDate: "1950-01",
     notes:
       "Placeholder. Add musicbrainzId from the MusicBrainz artist page when you want API-backed birthdays/releases. beginDate is enough for the Birthdays grouping.",
   },
@@ -77,6 +134,20 @@ export const artists: Artist[] = [
     tags: ["favorite"],
     notes:
       "Placeholder local band. No MusicBrainz / setlist.fm IDs — add shows by hand in shows.ts.",
+  },
+  {
+    id: "zebra",
+    name: "Zebra",
+    musicbrainzId: "a8ad585a-2776-4531-a1cc-93b9a3c9d43b",
+    setlistFmMbid: "",
+    beginDate: "1950-01",
+    tags: ["favorite"],
+    notes: "Placeholder. Replace or remove once the real list is started.",
+    members: [
+      { name: "Randy Jackson", role: "vocals" },
+      { name: "Felix Hanemann", role: "bass" },
+      { name: "Guy Gelso", role: "drums" },
+    ],
   },
 ];
 

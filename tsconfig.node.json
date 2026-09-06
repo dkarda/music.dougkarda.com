@@ -16,5 +16,5 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "server", "api", "src/data/artists.ts", "src/types.ts"]
+  "include": ["vite.config.ts", "server", "api", "src/data/artists.ts", "src/types.ts", "src/lib/geo.ts"]
 }

@@ -4,7 +4,7 @@ const cards = [
   {
     to: "/upcoming",
     title: "Upcoming",
-    body: "Dates still ahead. Handwritten for now — local and small bands first.",
+    body: "Dates still ahead. Ticketmaster for catalog bands, handwritten for local bills.",
   },
   {
     to: "/attended",
