@@ -26,7 +26,7 @@ type Env = Record<string, string>;
 const BIRTHDAY_TTL_MS = 24 * 60 * 60 * 1000;
 const BIRTHDAYS_DUMP_FILE = "musicbrainz-birthdays.json";
 
-const ATTENDED_TTL_MS = 60 * 60 * 1000;
+const ATTENDED_TTL_MS = 24 * 60 * 60 * 1000;
 const ATTENDED_DUMP_FILE = "setlistfm-attended.json";
 
 const UPCOMING_TTL_MS = 24 * 60 * 60 * 1000;
@@ -47,7 +47,7 @@ const SKIP_RG_SECONDARY = new Set([
   "Remix",
 ]);
 const TM_GAP_MS = 250;
-const SETLIST_PAGE_GAP_MS = 550;
+const SETLIST_PAGE_GAP_MS = 750;
 const SETLIST_MAX_PAGES = 50;
 
 export function sendJson(res: ServerResponse, status: number, body: unknown): void {
@@ -102,21 +102,36 @@ async function fetchAttendedPage(
   page: number,
 ): Promise<{ ok: true; data: SetlistFmAttendedPage } | { ok: false; status: number; text: string }> {
   const url = `${SETLIST_BASE}/user/${encodeURIComponent(userId)}/attended?p=${page}`;
-  const response = await fetch(url, {
-    headers: {
-      "x-api-key": apiKey,
-      Accept: "application/json",
-    },
-    signal: AbortSignal.timeout(20_000),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    return { ok: false, status: response.status, text };
+  let lastFailure = { ok: false as const, status: 0, text: "Request failed" };
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          "x-api-key": apiKey,
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (response.ok) {
+        const data = (await response.json()) as SetlistFmAttendedPage;
+        return { ok: true, data };
+      }
+      lastFailure = {
+        ok: false,
+        status: response.status,
+        text: await response.text(),
+      };
+      if (response.status !== 429 && response.status < 500) return lastFailure;
+    } catch (error) {
+      lastFailure = {
+        ok: false,
+        status: 0,
+        text: error instanceof Error ? error.message : "Request failed",
+      };
+    }
+    if (attempt < 3) await sleep(attempt * 1_500);
   }
-
-  const data = (await response.json()) as SetlistFmAttendedPage;
-  return { ok: true, data };
+  return lastFailure;
 }
 
 type AttendedDump = {
@@ -134,7 +149,8 @@ function emptyAttendedDump(): AttendedDump {
 }
 
 function attendedDumpIsFresh(dump: AttendedDump): boolean {
-  return dump.at > 0 && Date.now() - dump.at < ATTENDED_TTL_MS;
+  const complete = dump.total == null || dump.shows.length >= dump.total;
+  return complete && dump.at > 0 && Date.now() - dump.at < ATTENDED_TTL_MS;
 }
 
 async function loadAttendedDump(): Promise<AttendedDump> {
@@ -164,7 +180,7 @@ function attendedMessage(shows: Show[], total?: number, refreshing?: boolean): s
   if (refreshing) {
     message += shows.length ? " Updating in the background." : " Filling in the background.";
   } else if (shows.length > 0) {
-    message += " Cached 1h.";
+    message += " Cached 24h.";
   }
   return message;
 }
@@ -189,11 +205,7 @@ async function refreshAttendedDump(env: Env): Promise<void> {
     await sleep(SETLIST_PAGE_GAP_MS);
     const next = await fetchAttendedPage(apiKey, userId, page);
     if (!next.ok) {
-      await saveAttendedDump({
-        at: Date.now(),
-        shows: shows.slice().sort((a, b) => b.date.localeCompare(a.date)),
-        total,
-      });
+      attendedRefreshCooldownUntil = Date.now() + 60_000;
       return;
     }
     shows.push(...(next.data.setlist ?? []).map(mapSetlist));
@@ -452,14 +464,20 @@ let tmRefreshCooldownUntil = 0;
 let tmLastExtra: string | undefined;
 
 function foldName(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return value
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/^the\b/, "")
+    .replace(/[^a-z0-9]/g, "");
 }
 
 function namesAlign(catalog: string, remote: string): boolean {
   const a = foldName(catalog);
   const b = foldName(remote);
   if (!a || !b) return false;
-  return a === b || a.includes(b) || b.includes(a);
+  return a === b;
 }
 
 function usesTicketmaster(artist: Artist): boolean {
@@ -722,10 +740,13 @@ type CachedReleaseGroup = {
 };
 
 type ReleasesDump = {
+  version?: number;
   at: number;
   windowStart: string;
   groups: CachedReleaseGroup[];
 };
+
+const RELEASES_CACHE_VERSION = 2;
 
 type LegacyReleasesDump = {
   artists: Record<string, { at: number; groups: Omit<CachedReleaseGroup, "artistMbid">[] }>;
@@ -783,6 +804,7 @@ function normalizeReleasesDump(raw: unknown): ReleasesDump {
   const next = raw as Partial<ReleasesDump> & Partial<LegacyReleasesDump>;
   if (Array.isArray(next.groups) && typeof next.at === "number") {
     return {
+      version: next.version,
       at: next.at,
       windowStart: typeof next.windowStart === "string" ? next.windowStart : "",
       groups: next.groups.filter(
@@ -805,13 +827,18 @@ function normalizeReleasesDump(raw: unknown): ReleasesDump {
         });
       }
     }
-    return { at: 0, windowStart: "", groups };
+    return { version: 1, at: 0, windowStart: "", groups };
   }
   return emptyReleasesDump();
 }
 
 function releasesDumpIsFresh(dump: ReleasesDump, windowStart: string): boolean {
-  return dump.windowStart === windowStart && dump.at > 0 && Date.now() - dump.at < RELEASES_TTL_MS;
+  return (
+    dump.version === RELEASES_CACHE_VERSION &&
+    dump.windowStart === windowStart &&
+    dump.at > 0 &&
+    Date.now() - dump.at < RELEASES_TTL_MS
+  );
 }
 
 async function loadReleasesDump(): Promise<ReleasesDump> {
@@ -887,19 +914,28 @@ async function refreshReleasesDump(env: Env): Promise<void> {
     if (started) await sleep(MB_RELEASE_GAP_MS);
     started = true;
     const slice = mbids.slice(i, i + MB_SEARCH_BATCH);
-    try {
-      groups.push(...(await searchReleaseGroupsForMbids(slice, windowStart, userAgent)));
-    } catch {
+    let batch: CachedReleaseGroup[] | undefined;
+    for (let attempt = 1; attempt <= 3 && !batch; attempt += 1) {
+      try {
+        batch = await searchReleaseGroupsForMbids(slice, windowStart, userAgent);
+      } catch {
+        if (attempt < 3) await sleep(attempt * MB_RELEASE_GAP_MS);
+      }
+    }
+    if (batch) {
+      groups.push(...batch);
+    } else {
       failed += 1;
     }
   }
 
-  if (groups.length === 0 && failed > 0) {
+  if (failed > 0) {
     releasesRefreshCooldownUntil = Date.now() + 60_000;
     return;
   }
 
   await saveReleasesDump({
+    version: RELEASES_CACHE_VERSION,
     at: Date.now(),
     windowStart,
     groups,

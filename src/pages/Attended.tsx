@@ -15,6 +15,8 @@ function catalogFallback(): AttendedResponse {
 
 export function Attended() {
   const [attended, setAttended] = useState<AttendedResponse | null>(null);
+  const [search, setSearch] = useState("");
+  const [resetExpansionKey, setResetExpansionKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,8 +50,34 @@ export function Attended() {
     () => mergePastManualShows(attended?.shows ?? [], manualShows),
     [attended],
   );
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredShows = useMemo(() => {
+    if (!normalizedSearch) return shows;
+    const exactArtistMatches = shows.filter(
+      (show) => show.artistName.trim().toLowerCase() === normalizedSearch,
+    );
+    if (exactArtistMatches.length > 0) return exactArtistMatches;
+    return shows.filter((show) =>
+      [
+        show.artistName,
+        show.venue,
+        show.city,
+        show.notes,
+        show.date,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedSearch),
+    );
+  }, [normalizedSearch, shows]);
 
   const waitingOnFill = !attended || (Boolean(attended.refreshing) && shows.length === 0);
+
+  const resetView = () => {
+    setSearch("");
+    setResetExpansionKey((current) => current + 1);
+  };
 
   return (
     <div className="space-y-8">
@@ -60,17 +88,49 @@ export function Attended() {
           still show up here once they have happened.
         </p>
       </header>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <label className="sr-only" htmlFor="attended-search">
+          Search attended shows
+        </label>
+        <input
+          id="attended-search"
+          type="search"
+          className="min-w-0 flex-1 border border-line bg-panel px-3 py-2 text-paper outline-none placeholder:text-muted focus:border-amp"
+          placeholder="Search artist, venue, city, or year"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+        <button
+          type="button"
+          className="stub cursor-pointer hover:border-amp"
+          onClick={resetView}
+        >
+          Reset
+        </button>
+      </div>
+      {normalizedSearch ? (
+        <p className="text-sm text-muted" aria-live="polite">
+          {filteredShows.length} matching show{filteredShows.length === 1 ? "" : "s"}
+        </p>
+      ) : null}
+      {attended?.refreshing && !waitingOnFill ? (
+        <LoadingBanner label="Updating" />
+      ) : null}
       {waitingOnFill ? (
         <LoadingBanner />
       ) : (
         <>
           {attended?.message ? <p className="text-sm text-muted">{attended.message}</p> : null}
           <ShowGroups
-            shows={shows}
+            shows={filteredShows}
             newestFirst
             collapseByYear
+            expandAll={Boolean(normalizedSearch)}
+            resetExpansionKey={resetExpansionKey}
             empty={
-              attended?.configured
+              normalizedSearch
+                ? `No attended shows match “${search.trim()}”.`
+                : attended?.configured
                 ? "No attended shows yet — nothing on setlist.fm or in the past manual list."
                 : "Placeholder until the API key is set on the server."
             }

@@ -6,6 +6,8 @@ npm-debug.log*
 node_modules
 dist
 dist-ssr
+hosting-upload
+hosting-upload.zip
 *.local
 .cache
 

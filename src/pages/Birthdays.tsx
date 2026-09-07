@@ -14,6 +14,7 @@ function catalogFallback(): BirthdaysResponse {
 
 export function Birthdays() {
   const [payload, setPayload] = useState<BirthdaysResponse | null>(null);
+  const [search, setSearch] = useState("");
   const [expandedMonths, setExpandedMonths] = useState(
     () =>
       new Set([
@@ -61,9 +62,30 @@ export function Birthdays() {
     };
   }, []);
 
+  const normalizedSearch = search.trim().toLowerCase();
   const grouped = useMemo(() => {
     if (!payload) return [];
-    const entries = payload.birthdays;
+    let entries = payload.birthdays;
+    if (normalizedSearch) {
+      const exactNameMatches = entries.filter(
+        (entry) => entry.name.trim().toLowerCase() === normalizedSearch,
+      );
+      entries =
+        exactNameMatches.length > 0
+          ? exactNameMatches
+          : entries.filter((entry) =>
+              [
+                entry.name,
+                entry.role,
+                entry.birthDate,
+                ...entry.affiliations.map((affiliation) => affiliation.bandName),
+              ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase()
+                .includes(normalizedSearch),
+            );
+    }
     const withNext = entries.map((entry) => ({
       ...entry,
       next: nextOccurrence(entry.birthDate),
@@ -78,9 +100,19 @@ export function Birthdays() {
       months.set(key, list);
     }
     return [...months.entries()];
-  }, [payload]);
+  }, [normalizedSearch, payload]);
 
-  const waitingOnFill = !payload || (payload.refreshing && grouped.length === 0);
+  const waitingOnFill =
+    !payload || (payload.refreshing && payload.birthdays.length === 0);
+
+  const resetView = () => {
+    setSearch("");
+    setExpandedMonths(
+      new Set([
+        new Date().toLocaleDateString("en-US", { month: "long" }),
+      ]),
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -96,11 +128,33 @@ export function Birthdays() {
         {payload?.note && <p className="text-sm text-muted">{payload.note}</p>}
       </header>
 
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <label className="sr-only" htmlFor="birthday-search">
+          Search birthdays
+        </label>
+        <input
+          id="birthday-search"
+          type="search"
+          className="min-w-0 flex-1 border border-line bg-panel px-3 py-2 text-paper outline-none placeholder:text-muted focus:border-amp"
+          placeholder="Search person, band, role, or date"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+        <button
+          type="button"
+          className="stub cursor-pointer hover:border-amp"
+          onClick={resetView}
+        >
+          Reset
+        </button>
+      </div>
       {waitingOnFill ? (
         <LoadingBanner />
+      ) : grouped.length === 0 && normalizedSearch ? (
+        <p className="text-muted">No birthdays match “{search.trim()}”.</p>
       ) : (
         grouped.map(([month, entries]) => {
-          const expanded = expandedMonths.has(month);
+          const expanded = Boolean(normalizedSearch) || expandedMonths.has(month);
           const contentId = `birthdays-${month.toLowerCase()}`;
           return (
           <section key={month}>
@@ -110,7 +164,9 @@ export function Birthdays() {
                 className="stub mb-3 inline-flex cursor-pointer items-center gap-2 hover:border-amp"
                 aria-expanded={expanded}
                 aria-controls={contentId}
-                onClick={() => toggleMonth(month)}
+                onClick={() => {
+                  if (!normalizedSearch) toggleMonth(month);
+                }}
               >
                 <span aria-hidden="true">{expanded ? "−" : "+"}</span>
                 {month}

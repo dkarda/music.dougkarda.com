@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatShowDate, groupByMonth } from "../lib/dates";
 import type { Show } from "../types";
 
@@ -42,11 +42,15 @@ export function ShowGroups({
   empty,
   newestFirst = false,
   collapseByYear = false,
+  expandAll = false,
+  resetExpansionKey = 0,
 }: {
   shows: Show[];
   empty: string;
   newestFirst?: boolean;
   collapseByYear?: boolean;
+  expandAll?: boolean;
+  resetExpansionKey?: number;
 }) {
   const groups = useMemo(() => groupByMonth(shows, newestFirst), [shows, newestFirst]);
   const yearGroups = useMemo(() => {
@@ -62,6 +66,10 @@ export function ShowGroups({
   const [expandedYears, setExpandedYears] = useState(
     () => new Set([String(new Date().getFullYear())]),
   );
+
+  useEffect(() => {
+    setExpandedYears(new Set([String(new Date().getFullYear())]));
+  }, [resetExpansionKey]);
 
   const toggleYear = (year: string) => {
     setExpandedYears((current) => {
@@ -83,7 +91,7 @@ export function ShowGroups({
     return (
       <div className="space-y-8">
         {yearGroups.map(([year, months]) => {
-          const expanded = expandedYears.has(year);
+          const expanded = expandAll || expandedYears.has(year);
           const contentId = `shows-${year}`;
           return (
             <section key={year}>
@@ -93,7 +101,9 @@ export function ShowGroups({
                   className="stub year-toggle mb-3 inline-flex cursor-pointer items-center gap-2"
                   aria-expanded={expanded}
                   aria-controls={contentId}
-                  onClick={() => toggleYear(year)}
+                  onClick={() => {
+                    if (!expandAll) toggleYear(year);
+                  }}
                 >
                   <span aria-hidden="true">{expanded ? "−" : "+"}</span>
                   {year}

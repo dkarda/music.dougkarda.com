@@ -67,6 +67,9 @@ export function Releases() {
         {payload?.note && <p className="text-sm text-muted">{payload.note}</p>}
       </header>
 
+      {payload?.refreshing && !waitingOnFill ? (
+        <LoadingBanner label="Updating" />
+      ) : null}
       {waitingOnFill ? (
         <LoadingBanner />
       ) : groups.length === 0 ? (

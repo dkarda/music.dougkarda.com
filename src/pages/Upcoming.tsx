@@ -60,6 +60,9 @@ export function Upcoming() {
           plus handwritten gigs for local and small bands the API will miss.
         </p>
       </header>
+      {remote?.refreshing && !waitingOnFill ? (
+        <LoadingBanner label="Updating" />
+      ) : null}
       {waitingOnFill ? (
         <LoadingBanner />
       ) : (
