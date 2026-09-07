@@ -68,6 +68,7 @@ export function Attended() {
           <ShowGroups
             shows={shows}
             newestFirst
+            collapseByYear
             empty={
               attended?.configured
                 ? "No attended shows yet — nothing on setlist.fm or in the past manual list."

@@ -14,6 +14,24 @@ function catalogFallback(): BirthdaysResponse {
 
 export function Birthdays() {
   const [payload, setPayload] = useState<BirthdaysResponse | null>(null);
+  const [expandedMonths, setExpandedMonths] = useState(
+    () =>
+      new Set([
+        new Date().toLocaleDateString("en-US", { month: "long" }),
+      ]),
+  );
+
+  const toggleMonth = (month: string) => {
+    setExpandedMonths((current) => {
+      const next = new Set(current);
+      if (next.has(month)) {
+        next.delete(month);
+      } else {
+        next.add(month);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -81,10 +99,25 @@ export function Birthdays() {
       {waitingOnFill ? (
         <LoadingBanner />
       ) : (
-        grouped.map(([month, entries]) => (
+        grouped.map(([month, entries]) => {
+          const expanded = expandedMonths.has(month);
+          const contentId = `birthdays-${month.toLowerCase()}`;
+          return (
           <section key={month}>
-            <h2 className="stub mb-3">{month}</h2>
-            <ul className="divide-y divide-line border-y border-line">
+            <h2>
+              <button
+                type="button"
+                className="stub mb-3 inline-flex cursor-pointer items-center gap-2 hover:border-amp"
+                aria-expanded={expanded}
+                aria-controls={contentId}
+                onClick={() => toggleMonth(month)}
+              >
+                <span aria-hidden="true">{expanded ? "−" : "+"}</span>
+                {month}
+              </button>
+            </h2>
+            {expanded && (
+            <ul id={contentId} className="divide-y divide-line border-y border-line">
               {entries.map((entry) => {
                 const age = ageOnNextBirthday(entry.birthDate);
                 return (
@@ -115,8 +148,10 @@ export function Birthdays() {
                 );
               })}
             </ul>
+            )}
           </section>
-        ))
+          );
+        })
       )}
     </div>
   );
