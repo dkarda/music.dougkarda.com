@@ -7,6 +7,8 @@ node_modules
 dist
 dist-ssr
 *.local
+.cache
+
 
 # Secrets — never commit API keys
 .env

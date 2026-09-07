@@ -3,9 +3,8 @@ import { NavLink, Outlet } from "react-router-dom";
 const links = [
   { to: "/upcoming", label: "Upcoming" },
   { to: "/attended", label: "Attended" },
-  { to: "/song-of-the-day", label: "Song of the Day" },
-  { to: "/birthdays", label: "Birthdays" },
   { to: "/releases", label: "Releases" },
+  { to: "/birthdays", label: "Birthdays" },
 ];
 
 export function Layout() {

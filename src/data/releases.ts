@@ -1,10 +1,9 @@
 import type { Release } from "../types";
 
 /**
- * Manual upcoming releases for small bands (and anything MusicBrainz will miss).
- * Long-term, MusicBrainz release-groups for catalog artists can fill this in
- * through a server proxy — same pattern as setlist.fm. Google Calendar is not
- * the source of truth.
+ * Handwritten releases for small bands (and anything MusicBrainz will miss).
+ * Catalog artists with a musicbrainzId are filled from MusicBrainz via /api/releases
+ * (albums and EPs only — singles are skipped).
  */
 export const manualReleases: Release[] = [
   {
@@ -12,8 +11,8 @@ export const manualReleases: Release[] = [
     artistId: "kai-hansen",
     title: "Born With A Hammer",
     date: "2026-09-18",
-    type: "LP",
+    type: "Album",
     source: "manual",
-    notes: "Placeholder local release — add real titles here as you hear about them.",
+    notes: "",
   },
 ];

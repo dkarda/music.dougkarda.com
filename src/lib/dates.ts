@@ -3,12 +3,21 @@ export function todayIso(now = new Date()): string {
 }
 
 export function parseIsoDate(iso: string): Date {
-  const [year, month, day = "01"] = iso.split("-");
+  const [year, month = "01", day = "01"] = iso.split("-");
   return new Date(Number(year), Number(month) - 1, Number(day));
 }
 
 export function isUpcoming(iso: string, now = new Date()): boolean {
   return parseIsoDate(iso) >= parseIsoDate(todayIso(now));
+}
+
+export function yearStartIso(now = new Date()): string {
+  return `${now.getFullYear()}-01-01`;
+}
+
+/** Jan 1 of the current local year through any later date. */
+export function inReleaseWindow(iso: string, now = new Date()): boolean {
+  return parseIsoDate(iso) >= parseIsoDate(yearStartIso(now));
 }
 
 export function monthKey(iso: string): string {
@@ -40,6 +49,20 @@ export function formatShowDate(iso: string): string {
 export function monthDayLabel(iso: string): string {
   const date = parseIsoDate(iso);
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+export function birthdayLabel(iso: string): string {
+  const parts = iso.split("-");
+  const date = parseIsoDate(iso);
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) {
+    return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  }
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export function nextOccurrence(iso: string, now = new Date()): Date {

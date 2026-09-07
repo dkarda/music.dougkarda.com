@@ -12,19 +12,14 @@ const cards = [
     body: "Nights already seen, pulled from setlist.fm. The API key stays off the public bundle.",
   },
   {
-    to: "/song-of-the-day",
-    title: "Song of the Day",
-    body: "One pick at a time. You choose the song and the video; nothing is auto-generated.",
+    to: "/releases",
+    title: "Releases",
+    body: "Albums and EPs this year and ahead — MusicBrainz for the allowlist, handwritten for gaps.",
   },
   {
     to: "/birthdays",
     title: "Birthdays",
-    body: "Only people and bands in the allowlist. MusicBrainz when we have an ID, a date on the record when we don’t.",
-  },
-  {
-    to: "/releases",
-    title: "Releases",
-    body: "Stub for now. Same artist list will drive it — not a personal Google Calendar as the long-term source.",
+    body: "People in the allowlist and band members. Founding years stay on the band record but do not show here.",
   },
 ];
 

@@ -5,4 +5,4 @@
  * Production MUST use a server-side function too — Vite middleware does not
  * ship with a static host. Keep SETLISTFM_API_KEY in the host's env, not VITE_.
  */
-export { handleAttended, handleBirthdays, handleUpcoming } from "../server/handlers";
+export { handleAttended, handleBirthdays, handleUpcoming, handleReleases } from "../server/handlers";
