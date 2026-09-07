@@ -1,9 +1,10 @@
-import { artists, artistIdForMbid } from "../src/data/artists";
+import { artists, artistIdForMbid, artistMusicbrainzId } from "../src/data/artists";
 import { manualReleases } from "../src/data/releases";
-import { catalogBirthdays } from "../src/lib/birthdays";
+import { catalogBirthdayCandidates, catalogBirthdays } from "../src/lib/birthdays";
 import type {
   Artist,
   AttendedResponse,
+  BirthdayAffiliation,
   BirthdayEntry,
   BirthdaysResponse,
   Show,
@@ -255,10 +256,10 @@ type MbArtist = { id?: string; name?: string; "life-span"?: { begin?: string } }
 
 type BirthdayGap = {
   id: string;
-  artistId: string;
+  personId: string;
   name: string;
   mbid: string;
-  bandName?: string;
+  affiliations: BirthdayAffiliation[];
   role?: string;
 };
 
@@ -278,30 +279,19 @@ function emptyBirthdaysDump(): BirthdaysDump {
 }
 
 function birthdayGaps(): BirthdayGap[] {
-  const gaps: BirthdayGap[] = [];
-  for (const artist of artists) {
-    if (artist.kind === "person" && !artist.birthDate?.trim() && artist.musicbrainzId?.trim()) {
-      gaps.push({
-        id: artist.id,
-        artistId: artist.id,
-        name: artist.name,
-        mbid: artist.musicbrainzId.trim().toLowerCase(),
-      });
-    }
-    for (const member of artist.members ?? []) {
-      if (member.birthDate?.trim() || !member.musicbrainzId?.trim()) continue;
-      const mbid = member.musicbrainzId.trim().toLowerCase();
-      gaps.push({
-        id: `${artist.id}:${mbid}`,
-        artistId: artist.id,
-        name: member.name,
-        mbid,
-        bandName: artist.name,
-        role: member.role,
-      });
-    }
-  }
-  return gaps;
+  return catalogBirthdayCandidates()
+    .filter((candidate) =>
+      !candidate.person.birthDate?.trim() &&
+      Boolean(candidate.person.musicbrainzId?.trim()),
+    )
+    .map((candidate) => ({
+      id: candidate.person.id,
+      personId: candidate.person.id,
+      name: candidate.person.name,
+      mbid: candidate.person.musicbrainzId!.trim().toLowerCase(),
+      affiliations: candidate.affiliations,
+      role: candidate.role,
+    }));
 }
 
 function extrasFromDump(dump: BirthdaysDump): BirthdayEntry[] {
@@ -313,11 +303,11 @@ function extrasFromDump(dump: BirthdaysDump): BirthdayEntry[] {
     if (!gap) continue;
     extras.push({
       id,
-      artistId: gap.artistId,
+      personId: gap.personId,
       name: gap.name,
       birthDate: entry.birthDate,
       source: "musicbrainz",
-      bandName: gap.bandName,
+      affiliations: gap.affiliations,
       role: gap.role,
     });
   }
@@ -782,7 +772,7 @@ function emptyReleasesDump(): ReleasesDump {
 function catalogReleaseMbids(): string[] {
   const ids: string[] = [];
   for (const artist of artists) {
-    const mbid = artist.musicbrainzId?.trim().toLowerCase();
+    const mbid = artistMusicbrainzId(artist)?.trim().toLowerCase();
     if (mbid) ids.push(mbid);
   }
   return ids;

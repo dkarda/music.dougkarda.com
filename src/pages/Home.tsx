@@ -14,7 +14,7 @@ const cards = [
   {
     to: "/releases",
     title: "Releases",
-    body: "Albums and EPs this year and ahead — MusicBrainz for the allowlist, handwritten for gaps.",
+    body: "Albums and EPs this year and ahead — MusicBrainz for the allowlist, plus gaps from releases.ts.",
   },
   {
     to: "/birthdays",

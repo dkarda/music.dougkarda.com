@@ -12,7 +12,7 @@ function catalogFallback(): ReleasesResponse {
       if (type === "single") return false;
       return inReleaseWindow(release.date);
     }),
-    note: "Using handwritten releases; the MusicBrainz proxy was unreachable.",
+    note: "Using local releases; the MusicBrainz proxy was unreachable.",
   };
 }
 
@@ -60,7 +60,7 @@ export function Releases() {
         <h1 className="font-display text-4xl tracking-wide uppercase">Releases</h1>
         <p className="text-muted">
           Albums and EPs for catalog artists with a MusicBrainz ID — this year
-          and anything dated later. Handwritten rows in
+          and anything dated later. Rows in
           <code className="mx-1 text-amp">releases.ts</code>
           still fill gaps MusicBrainz will miss.
         </p>
@@ -86,7 +86,6 @@ export function Releases() {
                     <p className="text-sm text-muted">
                       {getArtistById(release.artistId)?.name ?? release.artistId}
                       {release.type ? ` · ${release.type}` : ""}
-                      {release.source === "manual" ? " · handwritten" : ""}
                     </p>
                     {release.notes && <p className="text-sm text-muted">{release.notes}</p>}
                   </div>

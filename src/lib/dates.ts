@@ -74,6 +74,15 @@ export function nextOccurrence(iso: string, now = new Date()): Date {
   return next;
 }
 
+/** Full birth dates only. Year-only founding dates are not used on Birthdays. */
+export function ageOnNextBirthday(iso: string, now = new Date()): number | undefined {
+  const parts = iso.split("-");
+  if (parts.length < 2) return undefined;
+  const year = Number(parts[0]);
+  if (!Number.isFinite(year) || year < 1800) return undefined;
+  return nextOccurrence(iso, now).getFullYear() - year;
+}
+
 export function groupByMonth<T extends { date: string }>(
   items: T[],
   newestFirst = false,

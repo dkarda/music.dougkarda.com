@@ -1,32 +1,39 @@
 export type ArtistTag = "local" | "small" | "favorite";
 export type ArtistKind = "person" | "group";
 
-export interface ArtistMember {
+export interface Person {
+  id: string;
   name: string;
-  role?: string;
+  /** Default role used when this person is listed as a solo artist. */
+  primaryRole?: string;
   musicbrainzId?: string;
   /** Birthday (YYYY-MM-DD or YYYY-MM). */
   birthDate?: string;
+}
+
+export interface ArtistMembership {
+  personId: string;
+  /** Roles are membership-specific because they may differ by band. */
+  role?: string;
 }
 
 /** Curated allowlist entry. If they are not here, they are not on the site. */
 export interface Artist {
   id: string;
   name: string;
-  /** Person vs band/project. Birthdays page only lists people. */
+  /** Person vs band/project. Person artists resolve through personId. */
   kind?: ArtistKind;
+  personId?: string;
   /** Ticketmaster Discovery attraction id (K8vZ…). Skips name search. */
   ticketmasterId?: string;
-  /** MusicBrainz artist MBID — birthdays and release-groups. */
+  /** MusicBrainz artist MBID for groups; person artists resolve through personId. */
   musicbrainzId?: string;
   /** setlist.fm artist MBID (often the same as MusicBrainz). */
   setlistFmMbid?: string;
   notes?: string;
   tags?: ArtistTag[];
-  members?: ArtistMember[];
-  /**
-   * Birthday for people (YYYY-MM-DD). Founding year only for groups (YYYY).
-   */
+  members?: ArtistMembership[];
+  /** Founding year for groups. Person birthdays live in the people catalog. */
   birthDate?: string;
 }
 
@@ -56,13 +63,20 @@ export interface Release {
   notes?: string;
 }
 
+export interface BirthdayAffiliation {
+  artistId: string;
+  bandName: string;
+  role?: string;
+}
+
 export interface BirthdayEntry {
   id: string;
-  artistId: string;
+  personId: string;
   name: string;
   birthDate: string;
   source: "catalog" | "musicbrainz";
-  bandName?: string;
+  affiliations: BirthdayAffiliation[];
+  /** Unique roles aggregated from solo and band memberships. */
   role?: string;
 }
 

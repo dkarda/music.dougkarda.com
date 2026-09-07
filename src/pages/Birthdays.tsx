@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { LoadingBanner } from "../components/LoadingBanner";
 import { catalogBirthdays } from "../lib/birthdays";
-import { birthdayLabel, nextOccurrence } from "../lib/dates";
+import { ageOnNextBirthday, birthdayLabel, nextOccurrence } from "../lib/dates";
 import type { BirthdaysResponse } from "../types";
+import { RoleIcons } from "../components/RoleIcons";
 
 function catalogFallback(): BirthdaysResponse {
   return {
@@ -84,23 +85,35 @@ export function Birthdays() {
           <section key={month}>
             <h2 className="stub mb-3">{month}</h2>
             <ul className="divide-y divide-line border-y border-line">
-              {entries.map((entry) => (
-                <li key={entry.id} className="flex items-baseline justify-between py-3">
-                  <div>
-                    <p className="font-medium">{entry.name}</p>
-                    <p className="text-xs text-muted">
-                      {entry.bandName
-                        ? `${entry.bandName}${entry.role ? ` · ${entry.role}` : ""}`
-                        : entry.source === "musicbrainz"
-                          ? "MusicBrainz"
-                          : "Catalog"}
-                    </p>
+              {entries.map((entry) => {
+                const age = ageOnNextBirthday(entry.birthDate);
+                return (
+                <li key={entry.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
+                  <div className="flex min-w-[9rem] flex-[1.2] items-center gap-3">
+                    <div>
+                      <p className="font-medium">{entry.name}</p>
+                      {entry.role && (
+                        <p className="text-xs text-muted">{entry.role}</p>
+                      )}
+                    </div>
+                    <RoleIcons role={entry.role} />
                   </div>
-                  <p className="font-display text-sm tracking-wide text-chrome">
-                    {birthdayLabel(entry.birthDate)}
+                  <p className="min-w-[7rem] flex-1 text-sm text-muted">
+                    {entry.affiliations.length
+                      ? entry.affiliations.map((affiliation) => affiliation.bandName).join(" · ")
+                      : "Solo"}
                   </p>
+                  <div className="ml-auto shrink-0 text-right">
+                    <p className="font-display text-sm tracking-wide text-chrome">
+                      {birthdayLabel(entry.birthDate)}
+                    </p>
+                    {age != null && (
+                      <p className="text-xs text-muted">turns {age}</p>
+                    )}
+                  </div>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </section>
         ))
