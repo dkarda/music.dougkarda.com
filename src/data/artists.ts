@@ -673,6 +673,14 @@ export const artists: Artist[] = [
     ],
   },
   {
+    id: "larson-majura",
+    name: "Travis Larson & Jen Majura",
+    members: [
+      { personId: "travis-larson", role: "guitar" },
+      { personId: "jen-majura", role: "guitar / vocals" },
+    ],
+  },
+  {
     id: "led-zeppelin",
     name: "Led Zeppelin",
     ticketmasterId: "K8vZ91712u0",
