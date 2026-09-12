@@ -673,14 +673,6 @@ export const artists: Artist[] = [
     ],
   },
   {
-    id: "larson-majura",
-    name: "Travis Larson & Jen Majura",
-    members: [
-      { personId: "travis-larson", role: "guitar" },
-      { personId: "jen-majura", role: "guitar / vocals" },
-    ],
-  },
-  {
     id: "led-zeppelin",
     name: "Led Zeppelin",
     ticketmasterId: "K8vZ91712u0",
@@ -979,6 +971,14 @@ export const artists: Artist[] = [
   },
   { id: "toto", name: "Toto", ticketmasterId: "K8vZ91712y7", musicbrainzId: "aab5c954-cabe-432e-899e-1c4f99757327", birthDate: "1977" },
   { id: "trans-siberian-orchestra", name: "Trans-Siberian Orchestra", ticketmasterId: "K8vZ9171L10", birthDate: "1996" },
+  {
+    id: "larson-majura",
+    name: "Travis Larson & Jen Majura",
+    members: [
+      { personId: "travis-larson", role: "guitar" },
+      { personId: "jen-majura", role: "guitar / vocals" },
+    ],
+  },
   { id: "triumph", name: "Triumph", ticketmasterId: "K8vZ917CqB0", musicbrainzId: "5ba43ff1-f124-4b94-aed8-6428bd90bdd4", birthDate: "1975" },
   { id: "ufo", name: "UFO", ticketmasterId: "K8vZ9175HhV", musicbrainzId: "c0bf9e20-2872-4897-ad1f-0882b83272a0", birthDate: "1969" },
   { id: "uriah-heep", name: "Uriah Heep", ticketmasterId: "K8vZ91712Hf", musicbrainzId: "f1548c5b-329e-4036-921c-02213a04b525", birthDate: "1969" },
