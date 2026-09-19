@@ -266,6 +266,19 @@ export const artists: Artist[] = [
   { id: "bruce-springsteen", name: "Bruce Springsteen & The E Street Band", kind: "person", personId: "bruce-springsteen" },
   { id: "bryan-adams", name: "Bryan Adams", kind: "person", personId: "bryan-adams" },
   { id: "buckethead", name: "Buckethead", kind: "person", personId: "buckethead" },
+  {
+    id: "burning-witches",
+    name: "Burning Witches",
+    musicbrainzId: "35aaf2e1-50fa-4bb6-9e12-1b8bbdeca266",
+    birthDate: "2015",
+    members: [
+      { personId: "laura-guldemond", role: "vocals" },
+      { personId: "romana-kalkuhl", role: "guitar" },
+      { personId: "courtney-cox", role: "guitar" },
+      { personId: "jeanine-grob", role: "bass" },
+      { personId: "lala-frischknecht", role: "drums" },
+    ],
+  },
   { id: "candlebox", name: "Candlebox", ticketmasterId: "K8vZ9171fZ7", birthDate: "1991", musicbrainzId: "", notes: "Placeholder. Replace or remove once the real list is started." },
   {
     id: "cheap-trick",
@@ -333,6 +346,7 @@ export const artists: Artist[] = [
     ],
   },
   { id: "dire-straits", name: "Dire Straits", ticketmasterId: "K8vZ9171CvV", musicbrainzId: "614e3804-7d34-41ba-857f-811bad7c2b7a", birthDate: "1977" },
+  { id: "doro", name: "Doro", kind: "person", personId: "doro-pesch" },
   {
     id: "dream-theater",
     name: "Dream Theater",
@@ -621,6 +635,7 @@ export const artists: Artist[] = [
   },
   { id: "kai-hansen", name: "Kai Hansen", kind: "person", tags: ["favorite"], personId: "kai-hansen" },
   { id: "kamelot", name: "Kamelot", ticketmasterId: "K8vZ9175MEf", birthDate: "1991" },
+  { id: "kenny-wayne-shepherd", name: "Kenny Wayne Shepherd", kind: "person", personId: "kenny-wayne-shepherd" },
   {
     id: "king-diamond",
     name: "King Diamond",
@@ -659,8 +674,23 @@ export const artists: Artist[] = [
       { personId: "bruce-kulick", role: "guitar / vocals" },
     ],
   },
+  {
+    id: "kix",
+    name: "Kix",
+    musicbrainzId: "04a15a94-2a32-4f48-9596-ce3ea14e7d52",
+    birthDate: "1978",
+    members: [
+      { personId: "steve-whiteman", role: "vocals" },
+      { personId: "ronnie-younkins", role: "guitar" },
+      { personId: "brian-forsythe", role: "guitar" },
+      { personId: "mark-schenker", role: "bass" },
+      { personId: "jimmy-chalfant", role: "drums" },
+      { personId: "donnie-purnell", role: "bass" },
+    ],
+  },
   { id: "kks-priest", name: "KK's Priest", ticketmasterId: "K8vZ917hL80", birthDate: "2019" },
   { id: "kobra-and-the-lotus", name: "Kobra and the Lotus", musicbrainzId: "c634734e-9203-4b8f-b816-fbb767e63d70", birthDate: "2009" },
+  { id: "lacey-sturm", name: "Lacey Sturm", kind: "person", personId: "lacey-sturm" },
   { id: "lacuna-coil", name: "Lacuna Coil", ticketmasterId: "K8vZ9171X1V", birthDate: "1994" },
   {
     id: "larkin-poe",
@@ -816,6 +846,15 @@ export const artists: Artist[] = [
     notes: "Placeholder. Add musicbrainzId from the MusicBrainz artist page when you want API-backed birthdays/releases.",
   },
   { id: "soundgarden", name: "Soundgarden", ticketmasterId: "K8vZ91712Rf", musicbrainzId: "153c9281-268f-4cf3-8938-f5a4593e5df4", birthDate: "1984" },
+  {
+    id: "steve-miller-band",
+    name: "Steve Miller Band",
+    musicbrainzId: "e57f0cac-4f56-473c-8d7e-d93f753fd586",
+    birthDate: "1967",
+    members: [
+      { personId: "steve-miller", role: "vocals / guitar / harmonica" },
+    ],
+  },
   { id: "steve-vai", name: "Steve Vai", kind: "person", personId: "steve-vai" },
   { id: "stevie-ray-vaughan", name: "Stevie Ray Vaughan", kind: "person", personId: "stevie-ray-vaughan" },
   {
@@ -959,7 +998,18 @@ export const artists: Artist[] = [
   { id: "jimi-hendrix-experience", name: "The Jimi Hendrix Experience", musicbrainzId: "33b3c323-77c2-417c-a5b4-af7e6a111cc9", birthDate: "1966" },
   { id: "the-police", name: "The Police", ticketmasterId: "K8vZ917GvLV", musicbrainzId: "9e0e2b01-41db-4008-bd8b-988977d6019a", birthDate: "1977" },
   { id: "rolling-stones", name: "The Rolling Stones", ticketmasterId: "K8vZ917184f", birthDate: "1962" },
-  { id: "the-warning", name: "The Warning", ticketmasterId: "K8vZ917KSff", birthDate: "2013" },
+  {
+    id: "the-warning",
+    name: "The Warning",
+    ticketmasterId: "K8vZ917KSff",
+    musicbrainzId: "7f625f35-7e53-4f08-9201-16643979484b",
+    birthDate: "2013",
+    members: [
+      { personId: "daniela-villarreal", role: "vocals / guitar" },
+      { personId: "paulina-villarreal", role: "drums / vocals" },
+      { personId: "alejandra-villarreal", role: "bass / vocals" },
+    ],
+  },
   { id: "the-who", name: "The Who", ticketmasterId: "K8vZ91712T0", musicbrainzId: "9fdaa16b-a6c4-4831-b87c-bc9ca8ce7eaa", birthDate: "1964" },
   { id: "thin-lizzy", name: "Thin Lizzy", musicbrainzId: "6a726ac6-019e-455c-8bbb-571a77bed52e", birthDate: "1969" },
   {
