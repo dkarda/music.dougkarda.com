@@ -1,13 +1,13 @@
 import { isUpcoming } from "./dates";
-import type { Show } from "../types";
+import type { CatalogShow, Show } from "../types";
 
 function showKey(show: Show): string {
   return `${show.date}|${show.artistName.trim().toLowerCase()}`;
 }
 
-/** Past handwritten dates, joined onto setlist.fm rows when the same night already exists. */
-export function mergePastManualShows(setlistShows: Show[], manuals: Show[]): Show[] {
-  const pastManual = manuals.filter((show) => !isUpcoming(show.date));
+/** Past attended handwritten dates, joined onto setlist.fm rows when the same night already exists. */
+export function mergePastManualShows(setlistShows: Show[], manuals: CatalogShow[]): Show[] {
+  const pastManual = manuals.filter((show) => show.attended && !isUpcoming(show.date));
   const byKey = new Map<string, Show>();
 
   for (const show of setlistShows) {
@@ -34,7 +34,7 @@ export function mergePastManualShows(setlistShows: Show[], manuals: Show[]): Sho
 }
 
 /** Future handwritten dates, joined onto Ticketmaster rows when the same night already exists. */
-export function mergeUpcomingShows(apiShows: Show[], manuals: Show[]): Show[] {
+export function mergeUpcomingShows(apiShows: Show[], manuals: CatalogShow[]): Show[] {
   const futureManual = manuals.filter((show) => isUpcoming(show.date));
   const byKey = new Map<string, Show>();
 

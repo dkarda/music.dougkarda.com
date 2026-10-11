@@ -4,6 +4,7 @@ export type ArtistKind = "person" | "group";
 export interface Person {
   id: string;
   name: string;
+  aka?: string;
   /** Default role used when this person is listed as a solo artist. */
   primaryRole?: string;
   musicbrainzId?: string;
@@ -49,6 +50,11 @@ export interface Show {
   source: ShowSource;
   notes?: string;
   url?: string;
+}
+
+/** Handwritten catalog row. Authors must set attended; API shows omit this field. */
+export interface CatalogShow extends Show {
+  attended: boolean;
 }
 
 export type ReleaseSource = "manual" | "musicbrainz";

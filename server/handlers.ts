@@ -31,6 +31,9 @@ const ATTENDED_DUMP_FILE = "setlistfm-attended.json";
 
 const UPCOMING_TTL_MS = 24 * 60 * 60 * 1000;
 const TM_DUMP_FILE = "ticketmaster-ny-events.json";
+const TM_CACHE_VERSION = 2;
+const TM_PAGE_SIZE = 200;
+const TM_MAX_PAGES = 5;
 const RELEASES_TTL_MS = 24 * 60 * 60 * 1000;
 const RELEASES_DUMP_FILE = "musicbrainz-release-groups.json";
 const MB_RELEASE_GAP_MS = 1100;
@@ -457,7 +460,13 @@ type TmEvent = {
   _embedded?: { venues?: TmVenue[]; attractions?: TmAttraction[] };
 };
 
-type TmDump = { at: number; events: TmEvent[] };
+type TmDump = { version?: number; at: number; events: TmEvent[] };
+type TmFetchResult = {
+  events: TmEvent[];
+  rateLimited: boolean;
+  failed: boolean;
+  quotaResetAt?: number;
+};
 let tmDumpMemory: TmDump | undefined;
 let tmRefresh: Promise<void> | null = null;
 let tmRefreshCooldownUntil = 0;
@@ -509,7 +518,7 @@ function catalogArtistsForEvent(event: TmEvent, catalog: Artist[]): Artist[] {
   for (const artist of catalog) {
     const tmId = artist.ticketmasterId?.trim();
     const hit = attractions.some((attraction) => {
-      if (tmId && attraction.id === tmId) return true;
+      if (tmId) return attraction.id === tmId;
       return Boolean(attraction.name && namesAlign(artist.name, attraction.name));
     });
     if (hit && !seen.has(artist.id)) {
@@ -562,24 +571,46 @@ function mapTmEvent(event: TmEvent, artist: Artist): Show | undefined {
   };
 }
 
-async function fetchNyMetroEvents(
-  apiKey: string,
-): Promise<{ events: TmEvent[]; rateLimited: boolean; failed: boolean; quotaResetAt?: number }> {
-  const events: TmEvent[] = [];
-  const geo = `${NY_METRO_CENTER.lat},${NY_METRO_CENTER.lon}`;
-  const maxPages = 5;
+function catalogAttractionIds(): string[] {
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  for (const artist of artists) {
+    const id = artist.ticketmasterId?.trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+  }
+  return ids;
+}
 
-  for (let page = 0; page < maxPages; page += 1) {
+function needsTmNameFallback(): boolean {
+  return artists.some((artist) => usesTicketmaster(artist) && !artist.ticketmasterId?.trim());
+}
+
+function mergeTmEvents(into: Map<string, TmEvent>, events: TmEvent[]): void {
+  for (const event of events) {
+    if (event.id) into.set(event.id, event);
+  }
+}
+
+async function fetchTmEventPages(
+  apiKey: string,
+  extra: Record<string, string> = {},
+): Promise<TmFetchResult> {
+  const events: TmEvent[] = [];
+
+  for (let page = 0; page < TM_MAX_PAGES; page += 1) {
     if (page > 0) await sleep(TM_GAP_MS);
     const params = new URLSearchParams({
-      geoPoint: geo,
+      geoPoint: `${NY_METRO_CENTER.lat},${NY_METRO_CENTER.lon}`,
       radius: String(NY_METRO_RADIUS_MILES),
       unit: "miles",
       classificationName: "music",
-      size: "200",
+      size: String(TM_PAGE_SIZE),
       page: String(page),
       sort: "date,asc",
       apikey: apiKey,
+      ...extra,
     });
     const { status, data, headers } = await fetchTmJson<TmEventsPage>(`${TM_BASE}/events.json?${params.toString()}`);
     if (status === 429) {
@@ -600,6 +631,41 @@ async function fetchNyMetroEvents(
   return { events, rateLimited: false, failed: false };
 }
 
+async function fetchCatalogTmEvents(apiKey: string): Promise<TmFetchResult> {
+  const byId = new Map<string, TmEvent>();
+  const attractionIds = catalogAttractionIds();
+
+  for (let i = 0; i < attractionIds.length; i += 1) {
+    if (i > 0) await sleep(TM_GAP_MS);
+    const page = await fetchTmEventPages(apiKey, { attractionId: attractionIds[i] });
+    if (page.failed) {
+      return {
+        events: [...byId.values()],
+        rateLimited: page.rateLimited,
+        failed: true,
+        quotaResetAt: page.quotaResetAt,
+      };
+    }
+    mergeTmEvents(byId, page.events);
+  }
+
+  if (needsTmNameFallback()) {
+    if (attractionIds.length > 0) await sleep(TM_GAP_MS);
+    const metro = await fetchTmEventPages(apiKey);
+    if (metro.failed) {
+      return {
+        events: [...byId.values()],
+        rateLimited: metro.rateLimited,
+        failed: true,
+        quotaResetAt: metro.quotaResetAt,
+      };
+    }
+    mergeTmEvents(byId, metro.events);
+  }
+
+  return { events: [...byId.values()], rateLimited: false, failed: false };
+}
+
 async function loadTmDump(): Promise<TmDump | undefined> {
   if (tmDumpMemory?.events) return tmDumpMemory;
   const disk = await readJsonCache<TmDump>(TM_DUMP_FILE);
@@ -614,7 +680,7 @@ async function saveTmDump(dump: TmDump): Promise<void> {
 }
 
 function dumpIsFresh(dump: TmDump): boolean {
-  return Date.now() - dump.at < UPCOMING_TTL_MS;
+  return dump.version === TM_CACHE_VERSION && dump.at > 0 && Date.now() - dump.at < UPCOMING_TTL_MS;
 }
 
 function cacheStamp(at: number): string {
@@ -677,10 +743,10 @@ async function refreshTmDump(env: Env): Promise<void> {
   const apiKey = env.TICKETMASTER_API_KEY?.trim();
   if (!apiKey) return;
 
-  const fetched = await fetchNyMetroEvents(apiKey);
+  const fetched = await fetchCatalogTmEvents(apiKey);
   if (!fetched.failed) {
     tmLastExtra = undefined;
-    await saveTmDump({ at: Date.now(), events: fetched.events });
+    await saveTmDump({ version: TM_CACHE_VERSION, at: Date.now(), events: fetched.events });
     return;
   }
 

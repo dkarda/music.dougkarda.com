@@ -26,6 +26,7 @@ Edit `src/data/artists.ts` and add an object:
 - `id` — stable slug used by shows, songs, and releases
 - `name`
 - `musicbrainzId` — optional UUID from the MusicBrainz artist page
+- `ticketmasterId` — optional Discovery attraction id (`K8vZ…`); Upcoming uses this instead of a name search
 - `setlistFmMbid` — optional; often the same UUID as MusicBrainz
 - `beginDate` — optional `YYYY-MM-DD` (or `YYYY-MM`) birthday / founding date
 - `tags` — `local`, `small`, `favorite`
@@ -107,9 +108,7 @@ There is no polite “all artist birthdays on Earth” feed we should use. Filte
 
 ### Upcoming shows for “bands I care about”
 
-Bandsintown, Songkick, and Ticketmaster can list upcoming concerts — and **each wants its own key** (Songkick has not been generally open to new apps). Same proxy pattern as setlist.fm; none of them are integrated yet.
-
-Until you pick one: **manual `shows.ts`** is the truthful source for upcoming, especially local bills.
+Ticketmaster Discovery is wired for catalog dates in the NY metro area (geoPoint + 60 miles). A background refresh at most once per 24h queries each artist’s `ticketmasterId`, then a metro dump only as a name-match fallback for artists without an ID. Local/small bands are skipped unless they have a Ticketmaster id. Results merge with handwritten `shows.ts`. Cache: `.cache/ticketmaster-ny-events.json`.
 
 ## Layout
 
@@ -119,5 +118,5 @@ Lists grouped by month (upcoming vs past), not a sparse calendar. The dataset is
 
 1. Copy `.env.example` → `.env` and paste a setlist.fm key + username when you want attended history.
 2. Replace the placeholder artists with the real allowlist (MusicBrainz IDs from artist pages).
-3. Decide whether to flesh out **attended** (setlist.fm is ready) or **upcoming** (manual first, then maybe Bandsintown behind the same proxy).
+3. Add `ticketmasterId` on catalog artists you want Upcoming to pick up automatically; keep local bills in `shows.ts`.
 4. When hosting, add a serverless function that reuses `handleAttended` / `handleBirthdays`.

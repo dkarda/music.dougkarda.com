@@ -1,12 +1,12 @@
-import type { Show } from "../types";
+import type { CatalogShow } from "../types";
 
 /**
  * Handwritten live shows — especially local / small bands APIs will miss.
  * Upcoming dates appear on /upcoming (and merge with Ticketmaster for catalog
- * artists). Once a date is in the past, it joins the setlist.fm list on /attended.
- * the setlist.fm list on /attended (matched by date + artist name).
+ * artists) regardless of attended. Past rows appear on /attended only when
+ * attended is true, merged with the setlist.fm list (matched by date + artist name).
  */
-export const manualShows: Show[] = [
+export const manualShows: CatalogShow[] = [
   {
     id: "zepparella-2026-08-08",
     artistId: "zepparella",
@@ -15,6 +15,7 @@ export const manualShows: Show[] = [
     venue: "Stepping Stone Park",
     city: "Great Neck",
     source: "manual",
+    attended: true,
     notes: "Clem got me and Petey O into the free town only event.",
   },
   {
@@ -25,6 +26,7 @@ export const manualShows: Show[] = [
     venue: "Mr. Beery's Pub",
     city: "Bethpage",
     source: "manual",
+    attended: true,
     notes: "Local one off show with Ad Astra opening up.",
   },
   {
@@ -35,6 +37,7 @@ export const manualShows: Show[] = [
     venue: "Mr. Beery's Pub",
     city: "Bethpage",
     source: "manual",
+    attended: true,
     notes: "Local one off show with Travis Larson headlining.",
   },
   {
@@ -45,6 +48,7 @@ export const manualShows: Show[] = [
     venue: "Live on the Porch",
     city: "Smithtown",
     source: "manual",
+    attended: true,
     notes: "Local Randy Jackson show.",
   },
   {
@@ -55,6 +59,7 @@ export const manualShows: Show[] = [
     venue: "Mr. Beery's Pub",
     city: "Bethpage",
     source: "manual",
+    attended: true,
     notes: "Opened up for Ad Astra.",
   },
   {
@@ -65,6 +70,84 @@ export const manualShows: Show[] = [
     venue: "Mr. Beery's Pub",
     city: "Bethpage",
     source: "manual",
+    attended: true,
     notes: "Travis Larson & Jen Majura opening.",
+  },
+  {
+    id: "squeezeplay-cartunes-2026-10-03",
+    artistId: "squeezeplay-cartunes",
+    artistName: "SqueezePlay/CarTunes",
+    date: "2026-10-03",
+    venue: "Twisted Cow Distillery",
+    city: "East Northport",
+    source: "manual",
+    attended: true,
+    notes: "",
+  },
+  {
+    id: "squeezeplay-cartunes-2026-10-23",
+    artistId: "squeezeplay-cartunes",
+    artistName: "SqueezePlay/CarTunes",
+    date: "2026-10-23",
+    venue: "Great South Bay Brewery",
+    city: "Bay Shore",
+    source: "manual",
+    attended: false,
+    notes: "",
+  },
+  {
+    id: "mike-delguidice-and-the-cans-band-2026-10-14",
+    artistId: "mike-delguidice-and-the-cans-band",
+    artistName: "Mike DelGuidice & The Cans Band",
+    date: "2026-10-14",
+    venue: "Mike DelGuidice's Live On The Porch",
+    city: "Smithtown",
+    source: "manual",
+    attended: false,
+    notes: "",
+  },
+  {
+    id: "mike-delguidice-and-the-cans-band-2026-11-19",
+    artistId: "mike-delguidice-and-the-cans-band",
+    artistName: "Mike DelGuidice & The Cans Band",
+    date: "2026-11-19",
+    venue: "Mike DelGuidice's Live On The Porch",
+    city: "Smithtown",
+    source: "manual",
+    attended: false,
+    notes: "",
+  },
+  {
+    id: "mike-delguidice-2026-10-23",
+    artistId: "mike-delguidice",
+    artistName: "Mike DelGuidice",
+    date: "2026-10-23",
+    venue: "Mike DelGuidice's Live On The Porch",
+    city: "Smithtown",
+    source: "manual",
+    attended: false,
+    notes: "",
+  },
+  {
+    id: "mike-delguidice-2026-11-25",
+    artistId: "mike-delguidice",
+    artistName: "Mike DelGuidice",
+    date: "2026-11-25",
+    venue: "Mike DelGuidice's Live On The Porch",
+    city: "Smithtown",
+    source: "manual",
+    attended: false,
+    notes: "",
+  },
+  {
+    id: "mike-delguidice-2026-12-23",
+    artistId: "mike-delguidice",
+    artistName: "Mike DelGuidice",
+    date: "2026-12-23",
+    venue: "Mike DelGuidice's Live On The Porch",
+    city: "Smithtown",
+    source: "manual",
+    attended: false,
+    notes: "",
   },
 ];

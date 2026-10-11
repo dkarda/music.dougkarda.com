@@ -84,8 +84,8 @@ export function Attended() {
       <header className="space-y-3">
         <h1 className="font-display text-4xl tracking-wide uppercase">Attended</h1>
         <p className="text-muted">
-          setlist.fm attendance plus past dates from the handwritten list — nights APIs miss
-          still show up here once they have happened.
+          setlist.fm attendance plus handwritten catalog nights marked attended — nights
+          APIs miss still show up here after they have happened.
         </p>
       </header>
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -131,7 +131,7 @@ export function Attended() {
               normalizedSearch
                 ? `No attended shows match “${search.trim()}”.`
                 : attended?.configured
-                ? "No attended shows yet — nothing on setlist.fm or in the past manual list."
+                ? "No attended shows yet — nothing on setlist.fm or in the attended catalog list."
                 : "Placeholder until the API key is set on the server."
             }
           />

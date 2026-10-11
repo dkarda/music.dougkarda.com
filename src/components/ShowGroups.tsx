@@ -1,38 +1,79 @@
 import { useEffect, useMemo, useState } from "react";
-import { formatShowDate, groupByMonth } from "../lib/dates";
+import { formatShowDate, groupByMonth, monthKey, todayIso } from "../lib/dates";
 import type { Show } from "../types";
 
-function MonthGroup({
+function currentMonthKey() {
+  return monthKey(todayIso());
+}
+
+function ShowList({
   group,
 }: {
   group: ReturnType<typeof groupByMonth<Show>>[number];
 }) {
   return (
-    <section>
-      <h3 className="stub mb-3">{group.label}</h3>
-      <ul className="divide-y divide-line border-y border-line">
-        {group.items.map((show) => (
-          <li key={show.id} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between">
-            <div>
-              <p className="font-medium">{show.artistName}</p>
-              <p className="text-sm text-muted">
-                {show.venue}
-                {show.city ? ` · ${show.city}` : ""}
-                {show.notes ? ` — ${show.notes}` : ""}
-              </p>
-            </div>
-            <p className="shrink-0 font-display text-sm tracking-wide text-chrome">
-              {show.url ? (
-                <a href={show.url} className="hover:text-amp" target="_blank" rel="noreferrer">
-                  {formatShowDate(show.date)}
-                </a>
-              ) : (
-                formatShowDate(show.date)
-              )}
+    <ul className="divide-y divide-line border-y border-line">
+      {group.items.map((show) => (
+        <li key={show.id} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between">
+          <div>
+            <p className="font-medium">{show.artistName}</p>
+            <p className="text-sm text-muted">
+              {show.venue}
+              {show.city ? ` · ${show.city}` : ""}
+              {show.notes ? ` — ${show.notes}` : ""}
             </p>
-          </li>
-        ))}
-      </ul>
+          </div>
+          <p className="shrink-0 font-display text-sm tracking-wide text-chrome">
+            {show.url ? (
+              <a href={show.url} className="hover:text-amp" target="_blank" rel="noreferrer">
+                {formatShowDate(show.date)}
+              </a>
+            ) : (
+              formatShowDate(show.date)
+            )}
+          </p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function MonthGroup({
+  group,
+  collapsible = false,
+  expanded = true,
+  onToggle,
+}: {
+  group: ReturnType<typeof groupByMonth<Show>>[number];
+  collapsible?: boolean;
+  expanded?: boolean;
+  onToggle?: () => void;
+}) {
+  if (!collapsible) {
+    return (
+      <section>
+        <h3 className="stub mb-3">{group.label}</h3>
+        <ShowList group={group} />
+      </section>
+    );
+  }
+
+  const contentId = `shows-month-${group.key}`;
+  return (
+    <section>
+      <h3>
+        <button
+          type="button"
+          className="stub mb-3 inline-flex cursor-pointer items-center gap-2 hover:border-amp"
+          aria-expanded={expanded}
+          aria-controls={contentId}
+          onClick={onToggle}
+        >
+          <span aria-hidden="true">{expanded ? "−" : "+"}</span>
+          {group.label}
+        </button>
+      </h3>
+      {expanded ? <div id={contentId}><ShowList group={group} /></div> : null}
     </section>
   );
 }
@@ -42,6 +83,7 @@ export function ShowGroups({
   empty,
   newestFirst = false,
   collapseByYear = false,
+  collapseByMonth = false,
   expandAll = false,
   resetExpansionKey = 0,
 }: {
@@ -49,6 +91,7 @@ export function ShowGroups({
   empty: string;
   newestFirst?: boolean;
   collapseByYear?: boolean;
+  collapseByMonth?: boolean;
   expandAll?: boolean;
   resetExpansionKey?: number;
 }) {
@@ -66,9 +109,13 @@ export function ShowGroups({
   const [expandedYears, setExpandedYears] = useState(
     () => new Set([String(new Date().getFullYear())]),
   );
+  const [expandedMonths, setExpandedMonths] = useState(
+    () => new Set([currentMonthKey()]),
+  );
 
   useEffect(() => {
     setExpandedYears(new Set([String(new Date().getFullYear())]));
+    setExpandedMonths(new Set([currentMonthKey()]));
   }, [resetExpansionKey]);
 
   const toggleYear = (year: string) => {
@@ -78,6 +125,18 @@ export function ShowGroups({
         next.delete(year);
       } else {
         next.add(year);
+      }
+      return next;
+    });
+  };
+
+  const toggleMonth = (key: string) => {
+    setExpandedMonths((current) => {
+      const next = new Set(current);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
       }
       return next;
     });
@@ -123,7 +182,17 @@ export function ShowGroups({
 
   return (
     <div className="space-y-8">
-      {groups.map((group) => <MonthGroup key={group.key} group={group} />)}
+      {groups.map((group) => (
+        <MonthGroup
+          key={group.key}
+          group={group}
+          collapsible={collapseByMonth}
+          expanded={expandAll || expandedMonths.has(group.key)}
+          onToggle={() => {
+            if (!expandAll) toggleMonth(group.key);
+          }}
+        />
+      ))}
     </div>
   );
 }
