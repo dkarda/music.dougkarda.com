@@ -203,7 +203,7 @@ export const artists: Artist[] = [
     ],
   },
   { id: "beat", name: "BEAT", ticketmasterId: "K8vZ917oaof", musicbrainzId: "aff74a2c-de0c-487d-b7fd-24caea74047d", birthDate: "2023" },
-  { id: "beth-hart", name: "Beth Hart", kind: "person", personId: "beth-hart", ticketmasterId: "K8vZ91714U7", musicbrainzId: "3fe817fc-966e-4ece-b00a-76be43e7e73c", birthDate: "1972-01-24" },
+  { id: "beth-hart", name: "Beth Hart", kind: "person", personId: "beth-hart", ticketmasterId: "K8vZ91714U7" },
   { id: "billy-joel", name: "Billy Joel", kind: "person", personId: "billy-joel", ticketmasterId: "K8vZ9171uv0" },
   {
     id: "black-sabbath",
@@ -865,8 +865,8 @@ export const artists: Artist[] = [
     ],
   },
   { id: "saxon", name: "Saxon", ticketmasterId: "K8vZ91719mf", musicbrainzId: "bbd80354-597e-4d53-94e4-92b3a7cb8f2c", birthDate: "1976" },
-  { id: "slash-feat-myles-kennedy", name: "Slash feat. Myles Kennedy & The Conspirators", ticketmasterId: "K8vZ9179hff", musicbrainzId: "7ce51ba7-91f4-46aa-a030-1e22aaa7510d", birthDate: "2010" },
   { id: "scorpions", name: "Scorpions", ticketmasterId: "K8vZ91712cf", musicbrainzId: "c3cceeed-3332-4cf0-8c4c-bbde425147b6", birthDate: "1965" },
+  { id: "slash-feat-myles-kennedy", name: "Slash feat. Myles Kennedy & The Conspirators", ticketmasterId: "K8vZ9179hff", musicbrainzId: "7ce51ba7-91f4-46aa-a030-1e22aaa7510d", birthDate: "2010" },
   {
     id: "slipknot",
     name: "Slipknot",

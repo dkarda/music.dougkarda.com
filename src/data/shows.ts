@@ -161,4 +161,15 @@ export const manualShows: CatalogShow[] = [
     attended: false,
     notes: "",
   },
+  {
+    id: "mike-delguidice-2027-02-13",
+    artistId: "mike-tramp",
+    artistName: "Mike Tramp",
+    date: "2027-02-13",
+    venue: "Mike DelGuidice's Live On The Porch",
+    city: "Smithtown",
+    source: "manual",
+    attended: false,
+    notes: "",
+  },
 ];

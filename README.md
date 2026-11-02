@@ -34,6 +34,30 @@ Edit `src/data/artists.ts` and add an object:
 
 Local and small bands do **not** need IDs. Add them anyway so they can have handwritten shows.
 
+### Solo artists
+
+A solo act is split across both files. `people.ts` holds the person. `artists.ts` is the allowlist entry that points at them.
+
+**`src/data/people.ts`**
+
+- `id` — slug other records point at (`doro-pesch`)
+- `name` — the person’s name
+- `musicbrainzId` — the person’s MusicBrainz id
+- `birthDate` — birthday
+- `primaryRole`, `aka` — optional
+
+**`src/data/artists.ts`**
+
+- `id` — slug shows and releases use (`doro`)
+- `name` — billed name; it can differ from the person (`Doro`, `Bruce Springsteen & The E Street Band`)
+- `kind: "person"`
+- `personId` — the `people.ts` id
+- `ticketmasterId` — when you have one
+- `setlistFmMbid` — only if it differs from the MusicBrainz id
+- `tags`, `notes` — optional
+
+Leave `musicbrainzId` and `birthDate` off the artist row. When `personId` is set, releases and birthdays read those from `people.ts`. Add `members` only when you also want a backing lineup listed. The solo person still stays on `personId`.
+
 ## How to add a manual show
 
 Edit `src/data/shows.ts`. Use an `artistId` that already exists in the catalog. Upcoming vs past is derived from `date`.
