@@ -150,4 +150,15 @@ export const manualShows: CatalogShow[] = [
     attended: false,
     notes: "",
   },
+  {
+    id: "edith-pageaud-2027-01-13",
+    artistId: "edith-pageaud",
+    artistName: "Edith Pageaud",
+    date: "2027-01-13",
+    venue: "St. Ann & the Holy Trinity Church",
+    city: "Brooklyn",
+    source: "manual",
+    attended: false,
+    notes: "",
+  },
 ];
