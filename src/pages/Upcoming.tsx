@@ -118,6 +118,7 @@ export function Upcoming() {
           {remote?.message ? <p className="text-sm text-muted">{remote.message}</p> : null}
           <ShowGroups
             shows={filteredShows}
+            pinGoing
             collapseByMonth
             expandAll={Boolean(normalizedSearch)}
             resetExpansionKey={resetExpansionKey}

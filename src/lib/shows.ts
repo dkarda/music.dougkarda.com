@@ -5,9 +5,20 @@ function showKey(show: Show): string {
   return `${show.date}|${show.artistName.trim().toLowerCase()}`;
 }
 
+function mergeManual(existing: Show, manual: CatalogShow): Show {
+  return {
+    ...existing,
+    artistId: manual.artistId ?? existing.artistId,
+    notes: manual.notes || existing.notes,
+    city: existing.city || manual.city,
+    venue: existing.venue || manual.venue,
+    going: manual.going || existing.going,
+  };
+}
+
 /** Past attended handwritten dates, joined onto setlist.fm rows when the same night already exists. */
 export function mergePastManualShows(setlistShows: Show[], manuals: CatalogShow[]): Show[] {
-  const pastManual = manuals.filter((show) => show.attended && !isUpcoming(show.date));
+  const pastManual = manuals.filter((show) => (show.attended || show.going) && !isUpcoming(show.date));
   const byKey = new Map<string, Show>();
 
   for (const show of setlistShows) {
@@ -18,13 +29,7 @@ export function mergePastManualShows(setlistShows: Show[], manuals: CatalogShow[
     const key = showKey(manual);
     const existing = byKey.get(key);
     if (existing) {
-      byKey.set(key, {
-        ...existing,
-        artistId: manual.artistId ?? existing.artistId,
-        notes: manual.notes ?? existing.notes,
-        city: manual.city ?? existing.city,
-        venue: existing.venue || manual.venue,
-      });
+      byKey.set(key, mergeManual(existing, manual));
     } else {
       byKey.set(key, manual);
     }
@@ -46,13 +51,7 @@ export function mergeUpcomingShows(apiShows: Show[], manuals: CatalogShow[]): Sh
     const key = showKey(manual);
     const existing = byKey.get(key);
     if (existing) {
-      byKey.set(key, {
-        ...existing,
-        artistId: manual.artistId ?? existing.artistId,
-        notes: manual.notes ?? existing.notes,
-        city: manual.city ?? existing.city,
-        venue: existing.venue || manual.venue,
-      });
+      byKey.set(key, mergeManual(existing, manual));
     } else {
       byKey.set(key, manual);
     }

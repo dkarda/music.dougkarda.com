@@ -1,22 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
-import { formatShowDate, groupByMonth, monthKey, todayIso } from "../lib/dates";
+import { formatShowDate, groupByMonth, isUpcoming, monthKey, todayIso } from "../lib/dates";
 import type { Show } from "../types";
+
+function hasTicket(show: Show): boolean {
+  return Boolean(show.going) && isUpcoming(show.date);
+}
 
 function currentMonthKey() {
   return monthKey(todayIso());
 }
 
-function ShowList({
-  group,
-}: {
-  group: ReturnType<typeof groupByMonth<Show>>[number];
-}) {
+function ShowList({ items }: { items: Show[] }) {
   return (
     <ul className="divide-y divide-line border-y border-line">
-      {group.items.map((show) => (
-        <li key={show.id} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between">
+      {items.map((show) => {
+        const ticketed = hasTicket(show);
+        return (
+        <li
+          key={show.id}
+          className={`flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between ${ticketed ? "border-l-2 border-amp pl-3" : ""}`}
+        >
           <div>
-            <p className="font-medium">{show.artistName}</p>
+            <p className="font-medium">
+              {show.artistName}
+              {ticketed ? (
+                <span className="ml-2 font-display text-xs tracking-wide text-amp uppercase">Tickets</span>
+              ) : null}
+            </p>
             <p className="text-sm text-muted">
               {show.venue}
               {show.city ? ` · ${show.city}` : ""}
@@ -33,7 +43,8 @@ function ShowList({
             )}
           </p>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }
@@ -53,7 +64,7 @@ function MonthGroup({
     return (
       <section>
         <h3 className="stub mb-3">{group.label}</h3>
-        <ShowList group={group} />
+        <ShowList items={group.items} />
       </section>
     );
   }
@@ -73,7 +84,7 @@ function MonthGroup({
           {group.label}
         </button>
       </h3>
-      {expanded ? <div id={contentId}><ShowList group={group} /></div> : null}
+      {expanded ? <div id={contentId}><ShowList items={group.items} /></div> : null}
     </section>
   );
 }
@@ -86,6 +97,7 @@ export function ShowGroups({
   collapseByMonth = false,
   expandAll = false,
   resetExpansionKey = 0,
+  pinGoing = false,
 }: {
   shows: Show[];
   empty: string;
@@ -94,6 +106,8 @@ export function ShowGroups({
   collapseByMonth?: boolean;
   expandAll?: boolean;
   resetExpansionKey?: number;
+  /** Repeat ticketed upcoming shows in a Going group above the months. */
+  pinGoing?: boolean;
 }) {
   const groups = useMemo(() => groupByMonth(shows, newestFirst), [shows, newestFirst]);
   const yearGroups = useMemo(() => {
@@ -142,13 +156,26 @@ export function ShowGroups({
     });
   };
 
+  const going = useMemo(
+    () => shows.filter(hasTicket).sort((a, b) => a.date.localeCompare(b.date)),
+    [shows],
+  );
+
   if (shows.length === 0) {
     return <p className="text-muted">{empty}</p>;
   }
 
+  const goingSection = pinGoing && going.length > 0 ? (
+    <section>
+      <h2 className="mb-3 font-display text-xl tracking-wide text-amp uppercase">Going</h2>
+      <ShowList items={going} />
+    </section>
+  ) : null;
+
   if (collapseByYear) {
     return (
       <div className="space-y-8">
+        {goingSection}
         {yearGroups.map(([year, months]) => {
           const expanded = expandAll || expandedYears.has(year);
           const contentId = `shows-${year}`;
@@ -182,6 +209,7 @@ export function ShowGroups({
 
   return (
     <div className="space-y-8">
+      {goingSection}
       {groups.map((group) => (
         <MonthGroup
           key={group.key}

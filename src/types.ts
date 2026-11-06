@@ -50,6 +50,8 @@ export interface Show {
   source: ShowSource;
   notes?: string;
   url?: string;
+  /** True when this night is one you have a ticket for. */
+  going?: boolean;
 }
 
 /** Handwritten catalog row. Authors must set attended; API shows omit this field. */

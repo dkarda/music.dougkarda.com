@@ -60,7 +60,7 @@ Leave `musicbrainzId` and `birthDate` off the artist row. When `personId` is set
 
 ## How to add a manual show
 
-Edit `src/data/shows.ts`. Use an `artistId` that already exists in the catalog. Upcoming vs past is derived from `date`.
+Edit `src/data/shows.ts`. Use an `artistId` that already exists in the catalog. Upcoming vs past is derived from `date`. Set `going: true` on a future row when you have a ticket. Upcoming pins those nights under Going and labels them in the month list. The same date and artist name also marks a matching Ticketmaster row. After the date passes, a `going` row is treated as attended.
 
 Manual releases (small bands, or anything MusicBrainz will miss) go in `src/data/releases.ts`.
 
